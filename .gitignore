@@ -1,41 +1,184 @@
-# Compiled Lua sources
-luac.out
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local TitleBar = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local MinimizeButton = Instance.new("TextButton")
+local CloseButton = Instance.new("TextButton")
+local ButtonsFrame = Instance.new("Frame")
 
-# luarocks build files
-*.src.rock
-*.zip
-*.tar.gz
+-- التكوين الأساسي
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.Name = "MiniHub"
 
-# Object files
-*.o
-*.os
-*.ko
-*.obj
-*.elf
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -125)
+MainFrame.Size = UDim2.new(0, 300, 0, 250)
 
-# Precompiled Headers
-*.gch
-*.pch
+-- شريط العنوان
+TitleBar.Name = "TitleBar"
+TitleBar.Parent = MainFrame
+TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-*.def
-*.exp
+Title.Name = "Title"
+Title.Parent = TitleBar
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.Size = UDim2.new(1, -80, 1, 0)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "🤍🙂النسخة المتعددة🙂🤍"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Parent = TitleBar
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MinimizeButton.Position = UDim2.new(1, -60, 0, 0)
+MinimizeButton.Size = UDim2.new(0, 30, 1, 0)
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 20
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+CloseButton.Name = "CloseButton"
+CloseButton.Parent = TitleBar
+CloseButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+CloseButton.Position = UDim2.new(1, -30, 0, 0)
+CloseButton.Size = UDim2.new(0, 30, 1, 0)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "×"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 20
 
+ButtonsFrame.Name = "ButtonsFrame"
+ButtonsFrame.Parent = MainFrame
+ButtonsFrame.BackgroundTransparency = 1
+ButtonsFrame.Position = UDim2.new(0, 10, 0, 40)
+ButtonsFrame.Size = UDim2.new(1, -20, 1, -50)
+
+-- المتغيرات
+local IsMinimized = false
+local IsSpeedEnabled = false
+local IsJumpEnabled = false
+local IsNoclipEnabled = false
+
+-- دالة إنشاء الأزرار
+local function CreateButton(name, position, color)
+    local Button = Instance.new("TextButton")
+    Button.Name = name
+    Button.Parent = ButtonsFrame
+    Button.BackgroundColor3 = color
+    Button.Position = UDim2.new(0, 0, position, 0)
+    Button.Size = UDim2.new(1, 0, 0, 35)
+    Button.Font = Enum.Font.GothamSemibold
+    Button.Text = name
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 14
+    return Button
+end
+
+-- إنشاء الأزرار
+local SpeedButton = CreateButton("السرعة", 0, Color3.fromRGB(52, 152, 219))
+local JumpButton = CreateButton("القفز", 0.2, Color3.fromRGB(46, 204, 113))
+local NoclipButton = CreateButton("اختراق الجدران", 0.4, Color3.fromRGB(231, 76, 60))
+local ResetButton = CreateButton("إعادة تعيين", 0.6, Color3.fromRGB(149, 165, 166))
+
+-- خاصية السحب
+local UserInputService = game:GetService("UserInputService")
+local Dragging = false
+local DragStart = nil
+local StartPos = nil
+
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = true
+        DragStart = input.Position
+        StartPos = MainFrame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local Delta = input.Position - DragStart
+        MainFrame.Position = UDim2.new(
+            StartPos.X.Scale,
+            StartPos.X.Offset + Delta.X,
+            StartPos.Y.Scale,
+            StartPos.Y.Offset + Delta.Y
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = false
+    end
+end)
+
+-- وظائف الأزرار
+MinimizeButton.MouseButton1Click:Connect(function()
+    IsMinimized = not IsMinimized
+    local targetHeight = IsMinimized and 30 or 250
+    MainFrame.Size = UDim2.new(0, 300, 0, targetHeight)
+    MinimizeButton.Text = IsMinimized and "+" or "-"
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+SpeedButton.MouseButton1Click:Connect(function()
+    IsSpeedEnabled = not IsSpeedEnabled
+    local player = game.Players.LocalPlayer
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = IsSpeedEnabled and 50 or 16
+    end
+    SpeedButton.Text = IsSpeedEnabled and "السرعة: مفعل" or "السرعة"
+end)
+
+JumpButton.MouseButton1Click:Connect(function()
+    IsJumpEnabled = not IsJumpEnabled
+    local player = game.Players.LocalPlayer
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.JumpPower = IsJumpEnabled and 100 or 50
+    end
+    JumpButton.Text = IsJumpEnabled and "القفز: مفعل" or "القفز"
+end)
+
+NoclipButton.MouseButton1Click:Connect(function()
+    IsNoclipEnabled = not IsNoclipEnabled
+    NoclipButton.Text = IsNoclipEnabled and "اختراق الجدران: مفعل" or "اختراق الجدران"
+end)
+
+ResetButton.MouseButton1Click:Connect(function()
+    local player = game.Players.LocalPlayer
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = 16
+        player.Character.Humanoid.JumpPower = 50
+    end
+    IsSpeedEnabled = false
+    IsJumpEnabled = false
+    IsNoclipEnabled = false
+    SpeedButton.Text = "السرعة"
+    JumpButton.Text = "القفز"
+    NoclipButton.Text = "اختراق الجدران"
+end)
+
+-- خاصية اختراق الجدران
+game:GetService("RunService").Stepped:Connect(function()
+    if IsNoclipEnabled then
+        local player = game.Players.LocalPlayer
+        if player.Character then
+            for _, part in pairs(player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+print("✨ تم تشغيل Mini Hub")
